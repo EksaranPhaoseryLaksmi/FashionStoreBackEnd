@@ -102,6 +102,34 @@ class products (db.Model):
     Price=db.Column(db.Integer,nullable=False)
     Color=db.Column(db.VARCHAR(100),nullable=False)
     ImageURL=db.Column(db.VARCHAR(100),nullable=True)
+
+class product (db.Model):
+    tablename="product"
+   
+    ID=db.Column(db.Integer, primary_key=True)
+    Name = db.Column(db.VARCHAR(255), nullable=True)
+    Price=db.Column(db.Integer,nullable=False)
+    Size=db.Column(db.VARCHAR(45),nullable=False)
+    Quantity=db.Column(db.Integer,nullable=False)
+    Image=db.Column(db.VARCHAR(255),nullable=True)
+    Store_ID=db.Column(db.Integer,nullable=False)
+    
+class store (db.Model):
+    tablename ="store"
+    
+    
+    ID=db.Column(db.Integer, primary_key=True)
+    Name = db.Column(db.VARCHAR(255), nullable=True)
+    Isphoto=db.Column(db.Integer,nullable=False)
+    Isdeliver=db.Column(db.Integer,nullable=False)
+    IsBank=db.Column(db.Integer,nullable=False)
+    Iscard=db.Column(db.Integer,nullable=False)
+    Iscash=db.Column(db.Integer,nullable=False)
+    Islocal=db.Column(db.Integer,nullable=False)
+    IsInternational=db.Column(db.Integer,nullable=False)
+    IsBoth=db.Column(db.Integer,nullable=False)
+    IsHelp=db.Column(db.Integer,nullable=False)
+    Type=db.Column(db.Integer,nullable=False)
     
 class orders (db.Model):
     tablename = "orders"

@@ -1,7 +1,7 @@
 from typing import List
 from flask import Flask, json, jsonify, make_response, request
 from flask_sqlalchemy import SQLAlchemy
-from models import db, Terms, Gender, employees, project_tracker, projects,brands,products,orders,order_items
+from models import db, Terms, Gender, employees, project_tracker, projects,brands,products,orders,order_items,store,product
 from sqlalchemy import exc
 from config import Config
 from flask_restx import Api, Resource, reqparse, fields
@@ -15,6 +15,7 @@ app.config.from_object(config)
 api = Api(app, version='1.0', title='Your API', description='API Description')
 api_ns = api.namespace("Reference", path='/reference', description="Reference Data")
 api_fn = api.namespace("Fashion", path='/fashion', description="Fashion Data")
+api_st = api.namespace("Store", path='/store', description="Store Data")
 #Initialize the SQLAlchemy extension with the Flask app
 db.init_app(app)
 
@@ -69,7 +70,30 @@ products_fields = api.model('products', {
     'ImageURL': fields.String(description='The description of the project')
 })
 
+product_fields = api.model('product', {
+    'ID': fields.Integer,
+    'Name': fields.String(description='Name of Product'),
+    'StoreID': fields.String(description='The store id of Product'),
+    'Size': fields.String(description='The size of product'),
+    'Quantity': fields.String(description='The quantity of product'),
+    'Price': fields.String(description='The price of product'),
+    'Image': fields.String(description='The image of product')
+})
 
+store_fields = api.model('store', {
+    'ID': fields.Integer,
+    'Name': fields.String(description='Name of Product'),
+    'Isphoto': fields.String(description='Photo of Product'),
+    'Isdeliver': fields.String(description='Deliver of product'),
+    'IsBank': fields.String(description='Bank Method of product'),
+    'Iscard': fields.String(description='Card Method of product'),
+    'Iscash': fields.String(description='Cash Method of product'),
+    'Islocal': fields.String(description='Local Location of product'),
+    'IsInternational': fields.String(description='International Location of product'),
+    'IsBoth': fields.String(description='Both Location of product'),
+    'IsHelp': fields.String(description='Help description of product'),
+    'Type': fields.String(description='Type of product')
+})
 
 project_fields = api.model('projects', {
     'employee_id': fields.Integer,
@@ -100,9 +124,33 @@ put_orders_parser.add_argument('address',type=str,required=True)
 put_orders_parser.add_argument('phone',type=str,required=True)
 put_orders_parser.add_argument('note',type=str,required=True)
 
+put_update_orders_parser = reqparse.RequestParser()
+put_update_orders_parser.add_argument('note',type=str,required=True)
+
 put_orders_lst_parser = reqparse.RequestParser()
 put_orders_lst_parser.add_argument('customerId',type=str,required=True)
- 
+
+put_store_parser = reqparse.RequestParser()
+put_store_parser.add_argument('name',type=str,required=True)
+put_store_parser.add_argument('isphoto',type=int,required=True)
+put_store_parser.add_argument('islocal',type=int,required=True)
+put_store_parser.add_argument('isinternational',type=float,required=True)
+put_store_parser.add_argument('isboth',type=str,required=True)
+put_store_parser.add_argument('isdeliver',type=str,required=True)
+put_store_parser.add_argument('isbank',type=str,required=True)
+put_store_parser.add_argument('iscard',type=str,required=True)
+put_store_parser.add_argument('iscash',type=str,required=True)
+put_store_parser.add_argument('ishelp',type=str,required=True)
+put_store_parser.add_argument('type',type=str,required=True)
+
+put_product_parser = reqparse.RequestParser()
+put_product_parser.add_argument('name',type=str,required=True)
+put_product_parser.add_argument('image',type=str,required=True)
+put_product_parser.add_argument('price',type=str,required=True)
+put_product_parser.add_argument('quantity',type=str,required=True)
+put_product_parser.add_argument('size',type=str,required=True)
+put_product_parser.add_argument('storeid',type=str,required=True)
+
 @api_fn.route('/brands')
 class CVLProjects(Resource):
     @api.marshal_with(brands_fields)
@@ -118,6 +166,76 @@ class CVLProjects(Resource):
             trackers = db.session.query(products).all()
             lst=[v for v in trackers]
             return lst
+
+@api_st.route('/store')
+class CVLProjects(Resource):
+    @api.marshal_with(store_fields)
+    def get(self):
+            stores = db.session.query(store).all()
+            lst=[v for v in stores]
+            return lst
+    @api.expect(put_store_parser)
+    def post(self): 
+        try:
+            args = put_store_parser.parse_args()
+            t = store( Name=args["name"], 
+            Isphoto=int(args["isphoto"]),
+            Isdeliver=int(args["isdeliver"]),
+            IsBank=int(args["isbank"]),
+            Iscard=int(args["iscard"]),
+            Iscash=int(args["iscash"]),
+            Islocal=int(args["islocal"]),
+            IsInternational=int(args["isinternational"]),
+            IsBoth=int(args["isboth"]),
+            IsHelp=int(args["ishelp"]),
+            Type=(args["type"]))
+            db.session.add(t)
+            db.session.commit()
+            return {'message':'success', 'id': t.ID}, 201
+        except Exception as e:
+                print (e)
+                return {'message': 'Something went wrong!'}, 500
+
+@api_st.route('/product')
+class CVLProjects(Resource):
+    @api.marshal_with(product_fields)
+    def get(self):
+            items = db.session.query(product).all()
+            lst=[v for v in items]
+            return lst
+    @api.expect(put_product_parser)
+    def post(self): 
+        try:
+            args = put_product_parser.parse_args()
+            t = product(Name = args["name"], 
+                Price = args["price"], 
+                Size = args["size"], 
+                Quantity = args["quantity"],
+                Image = args["image"],
+                Store_ID = args["storeid"])
+            db.session.add(t)
+            db.session.commit()
+            return {'message':'success'}, 201
+        except Exception as e:
+                print (e)
+                return {'message': 'Something went wrong!'}, 500
+
+@api_fn.route('/orders/<int:id>')
+class CVLProjects(Resource):
+    @api.expect(put_update_orders_parser)
+    def put(self, id):
+        orderitem = db.session.query(orders).filter_by(OrderID=id).first()
+        if orderitem:
+            try:
+                args = put_update_orders_parser.parse_args()
+                orderitem.OrderStatus = args["note"]
+                db.session.commit()
+                return {'message':'This record is updated successfully'}, 201
+            except Exception as e:
+                    print (e)
+                    return {'message': 'Something went wrong!'}, 500
+        else:
+            return {'message': 'Project Tracker not found'}, 404
 
 @api_fn.route('/orders')
 class CVLProjects(Resource):
@@ -143,11 +261,12 @@ class CVLProjects(Resource):
     products.Description,
     products.ProductID
 ).join(products, orders.ProductID == products.ProductID) \
- .filter(orders.Customer_ID == argsl["customerId"]).all()
+ .filter(orders.Customer_ID == argsl["customerId"])\
+ .filter(orders.OrderStatus !="Canceled").all()
             lst=[v for v in trackers]
             return lst
     @api.expect(put_orders_parser)
-    def post(self): 
+    def post(self):  
         try:
             args = put_orders_parser.parse_args()
             datetime_object =  date.today()
